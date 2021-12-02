@@ -28,18 +28,22 @@ from config import confirm_discord_button_name, confirm_discord_message,\
 # button 10
 from config import payment_button_name, payment_message
 
-
 from datetime import datetime as dt
-
+import time
 
 import telebot
 from telebot import types
+
+
+import flask
+app = flask.Flask(__name__)
+
 
 import os
 PORT = int(os.environ.get('PORT', 5000))
 
 
-bot = telebot.TeleBot(telegram_token)
+bot = telebot.TeleBot(telegram_token, threaded=False)
 slots_time = ["13:00", "15:00"]
 free_slot = ['1', '2', '23', '24']
 
@@ -203,10 +207,38 @@ def back_to_support_query(call):
                           chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup)
 
 
+
+# app
+# Process webhook calls
+@app.route("/%s/" % (telegram_token), methods=['POST'])
+def webhook():
+    if flask.request.headers.get('content-type') == 'application/json':
+        json_string = flask.request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return ''
+    else:
+        flask.abort(403)
+
+
+# Empty webserver index, return nothing, just http 200
+@app.route('/', methods=['GET', 'HEAD'])
+def index():
+    return ''
+
+
 def main():
+    bot.remove_webhook()
+    print('webhook removed')
+    time.sleep(3)
+
     print("""Start the bot""")
 
-    bot.polling(none_stop=True)
+    bot.set_webhook(f"""https://goodgamesbot.herokuapp.com/{telegram_token}""")
+
+    app.run(host='0.0.0.0',
+            port=8443,
+            debug=True)
 
     # bot.set_webhook()
 
