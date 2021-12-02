@@ -1,3 +1,10 @@
+import os
+from flask import Flask, request
+
+#I deleted an irrelevant code here for the question ...
+server = Flask(__name__)
+
+
 # pip3 install pytelegrambotapi --upgrade
 #
 
@@ -210,43 +217,23 @@ def back_to_support_query(call):
 
 # app
 # Process webhook calls
-@app.route("/%s/" % (telegram_token), methods=['POST'])
+@server.route('/' + telegram_token, methods=['POST'])
+def getMessage():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
+
+
+@server.route("/")
 def webhook():
-    if flask.request.headers.get('content-type') == 'application/json':
-        json_string = flask.request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return ''
-    else:
-        flask.abort(403)
-
-
-# Empty webserver index, return nothing, just http 200
-@app.route('/', methods=['GET', 'HEAD'])
-def index():
-    return ''
-
-
-def main():
     bot.remove_webhook()
-    print('webhook removed')
-    time.sleep(3)
-
-    print("""Start the bot""")
-
-    bot.set_webhook(f"""https://goodgamesbot.herokuapp.com/{telegram_token}""")
-
-    app.run(host='0.0.0.0',
-            port=8443,
-            debug=True)
-
-    # bot.set_webhook()
+    bot.set_webhook(url='https://goodgamesbot.herokuapp.com/' + telegram_token)
+    return "!", 200
 
 
 if __name__ == "__main__":
     while True:
         try:
-            main()
+            server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
         except ConnectionError as e:
             print('Ошибка соединения: ', e)
         except Exception as r:
