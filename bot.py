@@ -234,7 +234,9 @@ def main():
 if __name__ == "__main__":
     while True:
         try:
-            server.run()
+            print("""Start the bot""")
+
+            bot.polling(skip_pending=True)
         except ConnectionError as e:
             print('Ошибка соединения: ', e)
         except Exception as r:
