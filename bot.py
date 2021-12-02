@@ -216,24 +216,25 @@ def back_to_support_query(call):
 
 
 # app
-# Process webhook calls
-@server.route('/' + telegram_token, methods=['POST'])
-def getMessage():
-    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "!", 200
-
-
 @server.route("/")
 def webhook():
+
+    update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
+
+    bot.process_new_updates([update])
+    return "ok", 200, update
+
+
+def main():
     bot.remove_webhook()
+
     bot.set_webhook(url='https://goodgamesbot.herokuapp.com/' + telegram_token)
-    return "!", 200
 
 
 if __name__ == "__main__":
     while True:
         try:
-            server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+            server.run()
         except ConnectionError as e:
             print('Ошибка соединения: ', e)
         except Exception as r:
